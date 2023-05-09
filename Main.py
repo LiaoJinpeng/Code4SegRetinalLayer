@@ -9,7 +9,7 @@ import os
 import sys
 import tensorflow as tf
 
-from Configuration.Configs import Variables, auto_call_phone
+from Configuration.Configs import Variables
 from TaskSelection import ReturnTrainedParas as Paras
 from TaskSelection import get_early_stop
 
@@ -30,5 +30,3 @@ networks.compile(optimizer=paras.get_adam_optimizer(), loss=loss_fun, metrics=[
     ])
 networks.fit(train_ds, epochs=paras.epoch_sv, validation_data=valid_ds,
              callbacks=[get_early_stop('val_loss', 20, 'min')])
-
-auto_call_phone(networks.name)
