@@ -25,8 +25,30 @@ loss_fun = paras.get_loss_function(loss_id=0)
 # TODO: Future work - change the data loader to fit retinal data.
 train_ds, valid_ds = paras.get_data_loader().return_dataset()
 
-networks.compile(optimizer=paras.get_adam_optimizer(), loss=loss_fun, metrics=[
-    tf.keras.metrics.MeanIoU(num_classes=paras.seg_num),
+networks.compile(optimizer='sgd',
+                 loss=tf.keras.losses.CategoricalCrossentropy(False), metrics=[
+        tf.keras.metrics.MeanIoU(num_classes=paras.seg_num),
     ])
 networks.fit(train_ds, epochs=paras.epoch_sv, validation_data=valid_ds,
              callbacks=[get_early_stop('val_loss', 20, 'min')])
+
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+
+test_img = Image.open(r"C:\Users\24374\Desktop\retina - test\input\image1.bmp")
+test_img = np.array(test_img) / 255.
+test_img = test_img[450:834, 100:484]
+test_img = np.expand_dims(test_img, axis=0)
+test_img = np.expand_dims(test_img, axis=-1)
+
+pred_label = networks(test_img)
+pred_label = np.argmax(np.array(pred_label), axis=-1)
+
+plt.figure()
+plt.imshow(pred_label[0])
+plt.show()
+
+plt.figure()
+plt.imshow(test_img[0, :, :, 0])
+plt.show()

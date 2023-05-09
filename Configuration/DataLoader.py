@@ -16,9 +16,11 @@ import pathlib
 import cv2
 import json
 from glob import glob
+from PIL import Image
 from matplotlib import pyplot as plt
 # import Configs
 from Configuration import Configs
+from keras.utils import to_categorical
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 sys.path.append("..")
@@ -167,3 +169,48 @@ class DataLoader4Segmentation:
         return train_ds, valid_ds
 
 
+def obtain_fps(filepath, read_num, mark='bmp'):
+    fps = sorted(glob(os.path.join(filepath, ('*.' + mark))))[: read_num]
+    return fps
+
+
+class DataInputPipelineVTest:
+    def __init__(self):
+        v = variables()
+        image_fp = v.test_stage_retina_layer["train_image"]
+        label_fp = v.test_stage_retina_layer["train_label"]
+        train_num = v.num_of_ds["train"]
+        valid_num = v.num_of_ds["valid"]
+
+        self.bs = v.fitParas["bs"]
+        self.im_size = (v.width, v.height)
+        self.label_fps = obtain_fps(label_fp, train_num)
+        self.image_fps = obtain_fps(image_fp, train_num)
+
+    def return_dataset(self):
+        labels = self.read_label(self.label_fps)
+        images = np.expand_dims(self.read_image(self.image_fps), axis=-1)
+
+        train_ds = zip_and_batch_ds(images, labels, self.bs)
+        valid_ds = zip_and_batch_ds(images, labels, self.bs)
+        return train_ds, valid_ds
+
+    def read_image(self, fps):
+        images = []
+        for fp in fps:
+            tmp_image = np.asarray(Image.open(fp), dtype=np.float32)
+            tmp_image = tmp_image / 255.
+            tmp_image = tmp_image[450:834, 100:484]
+            images.append(tmp_image)
+        return np.array(images)
+
+    def read_label(self, fps):
+        labels = []
+        for fp in fps:
+            tmp_label = np.asarray(Image.open(fp), dtype=np.int32)
+            tmp_label = tmp_label[450:834, 100:484]
+            new_label = np.zeros(tmp_label.shape + (6, ))
+            for idx in range(6):  # 6 is class number
+                new_label[tmp_label == idx, idx] = 1
+            labels.append(new_label)
+        return np.array(labels)

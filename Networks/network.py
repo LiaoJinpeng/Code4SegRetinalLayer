@@ -29,7 +29,7 @@ class UNet:
 
     def __call__(self, include_top=True):
         Inputs = tf.keras.Input(self.image_shape)
-        n_filters = [64, 128, 256, 512, 1024]
+        n_filters = [32, 32, 64, 64, 128]
 
         x = Layers.ConvBlock(use_BN=False)(Inputs)
 
@@ -84,10 +84,7 @@ class UNet:
         x = Layers.Conv(fs=self.out_cls, ks=1, s=1)(x)
 
         if include_top:
-            if self.out_cls == 1:
-                x = Layers.get_activation_layer("sigmoid")(x)
-            elif self.out_cls > 1:
-                x = Layers.get_activation_layer("softmax")(x)
+            x = Layers.get_activation_layer("softmax")(x)
 
         models = tf.keras.models.Model(inputs=Inputs, outputs=x, name="UNet")
         return models

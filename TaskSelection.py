@@ -94,7 +94,7 @@ class ReturnTrainedParas:
 
     # ======================================================================== #
     def get_data_loader(self):
-        return Loader.DataLoader4Segmentation(self.data_fp)
+        return Loader.DataInputPipelineVTest()
 
     # ======================================================================== #
     def get_network(self, net_id=0):

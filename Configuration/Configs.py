@@ -32,24 +32,24 @@ class Variables:
     def __init__(self):
         # TODO: parameters for keras.fit function
         self.fitParas = {
-            "bs": 2,  # bs: batch size
-            "epoch_sv": 10,  # sv: supervised
+            "bs": 1,  # bs: batch size
+            "epoch_sv": 5,  # sv: supervised
         }
 
         # TODO: number of train/valid datasets
         self.num_of_ds = {
-            "train": 200,
-            "valid": 20,
+            "train": 8,
+            "valid": 8,
         }
 
         # TODO: shape of the datasets and labels
-        self.width = 512
-        self.height = 512
-        self.channel = 3
+        self.width = 384
+        self.height = 384
+        self.channel = 1
         self.image_shape = (self.width, self.height, self.channel)
 
         # TODO: number of segmentation class
-        self.seg_num = 3
+        self.seg_num = 6
         assert self.seg_num > 0
 
         # TODO: Optimizers Hyper-Paras
@@ -71,6 +71,13 @@ class Variables:
         self.project_mice_wound_segmentation = {
             "train_data": r"D:\Jinpeng\data_slice_massroad\train",
             "valid_data": r"D:\Jinpeng\data_slice_massroad\valid",
+        }
+
+        self.test_stage_retina_layer = {
+            "train_image": r"C:\Users\24374\Desktop\retina - test\input",
+            "train_label": r"C:\Users\24374\Desktop\retina - test\label",
+            "valid_image": r"",
+            "valid_label": r"",
         }
 
         # additional information.
