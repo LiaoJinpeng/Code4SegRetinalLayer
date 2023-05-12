@@ -33,13 +33,13 @@ class Variables:
         # TODO: parameters for keras.fit function
         self.fitParas = {
             "bs": 1,  # bs: batch size
-            "epoch_sv": 5,  # sv: supervised
+            "epoch_sv": 20,  # sv: supervised
         }
 
         # TODO: number of train/valid datasets
         self.num_of_ds = {
-            "train": 8,
-            "valid": 8,
+            "train": 2,
+            "valid": 2,
         }
 
         # TODO: shape of the datasets and labels

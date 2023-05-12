@@ -22,7 +22,11 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 sys.path.append("..")
 
 
+# TODO: PSPNet, DeepLabV3, 
 class UNet:
+    """
+    https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28
+    """
     def __init__(self, image_shape, out_cls):
         self.image_shape = image_shape
         self.out_cls = out_cls
@@ -91,6 +95,7 @@ class UNet:
 
 
 class TransUNet:
+    """https://arxiv.org/abs/2102.04306"""
     def __init__(self, image_shape, out_cls, num_heads=8):
         self.image_shape = image_shape
         self.num_heads = num_heads
@@ -315,6 +320,7 @@ class SwinUNet:
 
 
 class LightweightUShapeSwinTransformer:
+    """https://ieeexplore.ieee.org/abstract/document/9999672"""
     def __init__(self, image_shape, out_cls=None, patch_szie=4, window_size=8):
 
         width, height, channel = image_shape[0], image_shape[1], image_shape[2]

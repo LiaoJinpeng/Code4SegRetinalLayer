@@ -25,7 +25,7 @@ loss_fun = paras.get_loss_function(loss_id=0)
 # TODO: Future work - change the data loader to fit retinal data.
 train_ds, valid_ds = paras.get_data_loader().return_dataset()
 
-networks.compile(optimizer='sgd',
+networks.compile(optimizer='adam',
                  loss=tf.keras.losses.CategoricalCrossentropy(False), metrics=[
         tf.keras.metrics.MeanIoU(num_classes=paras.seg_num),
     ])
