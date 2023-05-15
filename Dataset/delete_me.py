@@ -73,7 +73,7 @@ model = UNet(image_shape=(size_x, size_y, 1), out_cls=n_class)()
 model.compile(optimizer='adam', loss='categorical_crossentropy',
               metrics=['accuracy'])
 
-history = model.fit(x_train, y_train_cat, batch_size=1, epochs=2,
+history = model.fit(x_train, y_train_cat, batch_size=1, epochs=10,
                     validation_data=(x_valid, y_valid_cat), shuffle=False)
 
 # %% Evaluation and Output results for demonstration.
@@ -98,18 +98,23 @@ plt.imshow(input_str, 'gray')
 plt.title('input-str')
 plt.show()
 
-color_maps = []
-for red in range(0, 255, 10):
-    color_maps.append([
-        red,
-        np.random.randint(0, 255),
-        np.random.randint(0, 255),
-    ])
-color_maps = np.array(color_maps) / 255.
+color_maps = [
+    (0, 0, 0),      # Black
+    (1, 0, 0),      # Red
+    (0, 1, 0),      # Lime
+    (0, 0, 1),      # Blue
+    (1, 1, 0),      # Yellow
+    (0.5, 0, 0.5),  # Purple
+    (0, 0.5, 0.5),  # Teal
+    (1, 0.5, 0),    # Orange
+    (0.5, 1, 0),    # Light Green
+    (0.5, 0, 1),    # Violet
+]
 
 input_str = input_str[:, :, 0]
 cmap = mcolors.ListedColormap(color_maps)
 plt.imshow(input_str, 'gray')
 plt.imshow(test_label_argmax, cmap=cmap, alpha=0.4)
 plt.title('Overlapped Mask on Input Structural')
+plt.savefig('Overlapped Mask on Input Structural.png')
 plt.show()
