@@ -67,6 +67,8 @@ for i in range(0, 10):
              color=cmap(i * 10), label=str(i))
 
 ax1.legend()
+plt.title('read segmented-lines from Yuxuan Dataset')
+plt.savefig('read segmented-lines from Yuxuan Dataset.png', dpi=300)
 plt.show()
 
 
@@ -88,4 +90,6 @@ for i in range(0, 10):
 
 plt.figure()
 plt.imshow(mask)
+plt.title('Converted Mask based on Segmented Lines')
+plt.savefig('Converted Mask based on Segmented Lines.png')
 plt.show()
