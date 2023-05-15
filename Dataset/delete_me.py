@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 
 from Networks.network import UNet
 from matplotlib import pyplot as plt
+import matplotlib.colors as mcolors
 import sys
 import random
 
@@ -67,7 +68,7 @@ valid_labels_cat = to_categorical(y_valid, num_classes=n_class)
 y_valid_cat = valid_labels_cat.reshape((
     y_valid.shape[0], y_valid.shape[1], y_valid.shape[2], n_class))
 
-# %% Build Neural Network and Train
+# %% Build Neural Network and Train.
 model = UNet(image_shape=(size_x, size_y, 1), out_cls=n_class)()
 model.compile(optimizer='adam', loss='categorical_crossentropy',
               metrics=['accuracy'])
@@ -75,7 +76,40 @@ model.compile(optimizer='adam', loss='categorical_crossentropy',
 history = model.fit(x_train, y_train_cat, batch_size=1, epochs=2,
                     validation_data=(x_valid, y_valid_cat), shuffle=False)
 
-test_label = model(x_valid[0])
+# %% Evaluation and Output results for demonstration.
+input_str = x_valid[0]
+test_label = model(np.expand_dims(input_str, axis=0))
+test_label_argmax = np.argmax(test_label[0], axis=-1)
+val_loss, val_acc = model.evaluate(x_valid, y_valid_cat, batch_size=1)
+print("Accuracy is: {}%".format(val_acc * 100.0))  # Accuracy is =  95.11 %
 
-# _, acc = model.evaluate(x_valid, y_valid_cat)
-# print("Accuracy is = ", (acc * 100.0), "%")
+plt.figure()
+plt.imshow(test_label_argmax)
+plt.title('pred-mask')
+plt.show()
+
+plt.figure()
+plt.imshow(np.argmax(y_valid_cat[0], axis=-1))
+plt.title('true-mask')
+plt.show()
+
+plt.figure()
+plt.imshow(input_str, 'gray')
+plt.title('input-str')
+plt.show()
+
+color_maps = []
+for red in range(0, 255, 10):
+    color_maps.append([
+        red,
+        np.random.randint(0, 255),
+        np.random.randint(0, 255),
+    ])
+color_maps = np.array(color_maps) / 255.
+
+input_str = input_str[:, :, 0]
+cmap = mcolors.ListedColormap(color_maps)
+plt.imshow(input_str, 'gray')
+plt.imshow(test_label_argmax, cmap=cmap, alpha=0.4)
+plt.title('Overlapped Mask on Input Structural')
+plt.show()
