@@ -44,15 +44,15 @@ def read_seg_layer(fp='D'):
     return layers
 
 
-def output_color_mask(str_img=None, seg_img=None, save_fp=None):
+def output_color_mask(ori_count, z_s, str_img=None, seg_img=None, save_fp=None):
     # TODO: Change z_s, z_e if position is incorrect.
-    z_s = 800
-    z_e = 1300
+    z_s = z_s
+    z_e = z_s + 500
 
     str_img = str_img[z_s:z_e, :, :]
     frame_num = np.shape(str_img)[1]
 
-    count = 0
+    count = ori_count
     template = "{}\\Frame_{}.png"
     for frame in range(frame_num):
         current_str = str_img[:, frame, :]  # Save it
@@ -64,7 +64,7 @@ def output_color_mask(str_img=None, seg_img=None, save_fp=None):
             np.zeros((frame_num, 1)), layer_e[:, :-1]], axis=-1)
 
         tmp = 0
-        for i in range(0, 10):
+        for i in range(0, 9):
             for x_p in range(frame_num):
                 s_p = int(np.ceil(layer_s[x_p, i]))
                 e_p = int(np.ceil(layer_e[x_p, i]))
@@ -81,13 +81,40 @@ def output_color_mask(str_img=None, seg_img=None, save_fp=None):
         count += 1
 
 
-str_fp = "F:\\OneDrive - UW\\SegmentationTask\\ManualSeg\\P1273_Angio (" \
-         "6mmx6mm)_6-13-2019_13-2-0_OS_sn25281_cube_z.img"
-seg_fp = "F:\\OneDrive - UW\\SegmentationTask\\ManualSeg\\P1273_Angio (" \
-         "6mmx6mm)_6-13-2019_13-2-0_OS_sn25281_cube_z\\layers.npy"
+basic_fp = "F:\\OneDrive - UW\\SegmentationTask\\ManualSeg\\"
+process_id = 4
+str_fps = [
+    "P1273_Angio (6mmx6mm)_6-13-2019_13-2-0_OS_sn25281_cube_z.img",
+    "P2457_Angio (6mmx6mm)_8-26-2021_12-58-39_OS_sn61468_cube_z.img",
+    "P2457_Angio (6mmx6mm)_8-26-2021_13-9-17_OD_sn61481_cube_z.img",
+    "P3275_Angio (6mmx6mm)_6-27-2019_10-47-51_OS_sn26417_cube_z.img",
+    "P3352_Angio (6mmx6mm)_2-10-2022_12-12-47_OS_sn66347_cube_z.img",
+]
+seg_fps = [
+    "P1273_Angio (6mmx6mm)_6-13-2019_13-2-0_OS_sn25281_cube_z\\layers.npy",
+    "P2457_Angio (6mmx6mm)_8-26-2021_12-58-39_OS_sn61468_cube_z\\layers.npy",
+    "P2457_Angio (6mmx6mm)_8-26-2021_13-9-17_OD_sn61481_cube_z\\layers.npy",
+    "P3275_Angio (6mmx6mm)_6-27-2019_10-47-51_OS_sn26417_cube_z\\layers.npy",
+    "P3352_Angio (6mmx6mm)_2-10-2022_12-12-47_OS_sn66347_cube_z\\layers.npy",
+]
+counts = [x * 502 for x in range(len(seg_fps))]
+crop_start = [
+    700, 450, 300, 370, 400
+]
 
-str_img = read_str_data(str_fp)
-seg_img = read_seg_layer(seg_fp)
+str_img = read_str_data(basic_fp + str_fps[process_id])
+seg_img = read_seg_layer(basic_fp + seg_fps[process_id])
 
-output_color_mask(str_img, seg_img,
-                  save_fp="C:\\Users\\24374\\Desktop\\test_data\\")
+seg_img = np.delete(seg_img, 6, axis=-1)
+seg_img = np.delete(seg_img, 6, axis=-1)
+
+new_seg_img = np.zeros(np.shape(seg_img))
+new_seg_img[:, :, 0:6] = seg_img[:, :, 0:6]
+new_seg_img[:, :, 6] = seg_img[:, :, 8]
+new_seg_img[:, :, 7:9] = seg_img[:, :, 6:8]
+
+output_color_mask(
+    ori_count=counts[process_id], z_s=crop_start[process_id],
+    str_img=str_img, seg_img=new_seg_img,
+    save_fp="F:\\OneDrive - UW\\SegmentationTask\\gitCode4SegRetinalLayer\\Cod"
+            "e4SegRetinalLayer\\Dataset\\retina seg test data\\")

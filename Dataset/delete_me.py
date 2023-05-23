@@ -2,6 +2,7 @@ import os
 import glob
 import cv2
 import numpy as np
+import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
 from keras.utils import normalize, to_categorical
 from sklearn.model_selection import train_test_split
@@ -14,7 +15,7 @@ import random
 
 size_x = 192
 size_y = 192
-n_class = 11
+n_class = 10
 
 # %% Data Loading
 fp_input = r"F:\OneDrive - UW\SegmentationTask\gitCode4SegRetinal" \
@@ -73,15 +74,19 @@ model = UNet(image_shape=(size_x, size_y, 1), out_cls=n_class)()
 model.compile(optimizer='adam', loss='categorical_crossentropy',
               metrics=['accuracy'])
 
-history = model.fit(x_train, y_train_cat, batch_size=1, epochs=10,
-                    validation_data=(x_valid, y_valid_cat), shuffle=False)
+history = model.fit(x_train[:1000], y_train_cat[:1000], batch_size=1, epochs=10,
+                    validation_data=(x_valid[:10], y_valid_cat[:10]))
 
 # %% Evaluation and Output results for demonstration.
-input_str = x_valid[0]
+nums = 290
+input_str = x_valid[nums]
+true_label = y_valid_cat[nums]
 test_label = model(np.expand_dims(input_str, axis=0))
 test_label_argmax = np.argmax(test_label[0], axis=-1)
-val_loss, val_acc = model.evaluate(x_valid, y_valid_cat, batch_size=1)
-print("Accuracy is: {}%".format(val_acc * 100.0))  # Accuracy is =  95.11 %
+accuracy_of_label = tf.reduce_mean(
+    tf.keras.metrics.categorical_accuracy(test_label[0], true_label)
+).numpy()
+print("Accuracy of Prediction Label: {:.3f}".format(accuracy_of_label))
 
 plt.figure()
 plt.imshow(test_label_argmax)
@@ -89,7 +94,7 @@ plt.title('pred-mask')
 plt.show()
 
 plt.figure()
-plt.imshow(np.argmax(y_valid_cat[0], axis=-1))
+plt.imshow(np.argmax(true_label, axis=-1))
 plt.title('true-mask')
 plt.show()
 

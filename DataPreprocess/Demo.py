@@ -48,6 +48,14 @@ elif file_format == 'mat':
     layers = loadmat(seg_fp)['layers']
     layer_num = layers.shape[-1]
 
+# TODO: This area is not done automatically.
+layers = np.delete(layers, 6, axis=-1)
+layers = np.delete(layers, 6, axis=-1)
+
+layers_new = np.zeros(shape=np.shape(layers))
+layers_new[:, :, 0:6] = layers[:, :, 0:6]
+layers_new[:, :, 6] = layers[:, :, 8]
+layers_new[:, :, 7:9] = layers[:, :, 6:8]
 # %% Now we have the Segmented Layers Information and Structural Images, we need
 # to plot the layers information and structural images in one image.
 
@@ -60,11 +68,14 @@ ax1 = fig1.add_subplot(111)
 
 assert slice_num < str_img.shape[-1]
 ax1.imshow(str_img[z_start:z_end, slice_num, :], cmap='gray')
-x = np.arange(0, layers.shape[1])
+x = np.arange(0, layers_new.shape[1])
 cmap = matplotlib.cm.get_cmap('prism')
-for i in range(0, 10):
-    ax1.plot(x, (layers[slice_num, :, i] - z_start), linewidth=2,
-             color=cmap(i * 10), label=str(i))
+for i in range(0, 9):
+    if i == 12:
+        continue
+    else:
+        ax1.plot(x, (layers_new[slice_num, :, i] - z_start), linewidth=2,
+                 color=cmap(i * 10), label=str(i))
 
 ax1.legend()
 plt.title('read segmented-lines from Yuxuan Dataset')
@@ -74,13 +85,13 @@ plt.show()
 
 mask_shape = np.shape(str_img[z_start:z_end, slice_num, :])
 mask = np.zeros(mask_shape, dtype=np.uint8)
-new_layer_positions = layers[slice_num, :, :] - z_start
+new_layer_positions = layers_new[slice_num, :, :] - z_start
 first_layer = np.zeros((500, 1))
 old_layer_positions = np.concatenate(
     [first_layer, new_layer_positions[:, :-1]], axis=-1)
 
 nums = 0
-for i in range(0, 10):
+for i in range(0, 9):
     current_layer = new_layer_positions[:, i]
     for x_p in range(500):
         s_p = int(np.ceil(old_layer_positions[x_p, i]))
