@@ -120,6 +120,7 @@ input_str = input_str[:, :, 0]
 cmap = mcolors.ListedColormap(color_maps)
 plt.imshow(input_str, 'gray')
 plt.imshow(test_label_argmax, cmap=cmap, alpha=0.4)
-plt.title('Overlapped Mask on Input Structural')
+plt.title('Overlapped Mask on Input Structural (Accuracy: {:.2f}%)'.format(
+    accuracy_of_label*100))
 plt.savefig('Overlapped Mask on Input Structural.png')
 plt.show()
