@@ -7,3 +7,4 @@ To easily run the code for segmentation task, please follow the below instructio
 
 (2) Open the 'Main.py' and change the filepath of image data and label data; then run the 'Main.py'.
 
+hint: a demo-used data is available in the folder 'Dataset->retina seg test data'.
