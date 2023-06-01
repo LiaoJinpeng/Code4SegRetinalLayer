@@ -12,13 +12,10 @@ import os
 import sys
 import tensorflow as tf
 import numpy as np
-import pathlib
 import cv2
-import json
 from glob import glob
-from PIL import Image
-from matplotlib import pyplot as plt
-# import Configs
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
 from Configuration import Configs
 from keras.utils import to_categorical
 
@@ -29,188 +26,63 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
 # %% Zip Datasets
-def zip_and_batch_ds(inputs_x, inputs_y, batch_sizes):
-    ds = tf.data.Dataset.from_tensor_slices((inputs_x, inputs_y))
-    return ds.batch(batch_sizes)
+class DataLoader:
+    def __init__(self, image_fp, label_fp, valid_rate=0.2):
+        self.image_fp = image_fp
+        self.label_fp = label_fp
+        self.valid_rate = valid_rate
 
+        self.image_fps = glob(os.path.join(image_fp, '*.png'))
+        self.label_fps = glob(os.path.join(label_fp, '*.png'))
 
-def func(ds):
-    return next(iter(ds))
-
-
-class ISDataLoader:
-    def __init__(self, data_filepath):
-        self.v = variables()
-
-        self.c = self.v.channel
-        self.w = self.v.width
-        self.h = self.v.height
-        self.nc = self.v.seg_num
-        self.img_dtypes = tf.dtypes.uint8
-        self.img_shape = [self.w, self.h]
-
-        self.train_ds_num = self.v.num_of_ds["train"]
-        self.valid_ds_num = self.v.num_of_ds["valid"]
-
-        self.train_fp = data_filepath["train_data"]
-        self.valid_fp = data_filepath["valid_data"]
-
-        self.bs = self.v.fitParas['bs']
-
-    def return_fps(self):
-        train_input = sorted(glob(os.path.join(self.train_fp, "input/*"))
-                             )[: self.train_ds_num]
-        train_label = sorted(glob(os.path.join(self.train_fp, "valid/*"))
-                             )[: self.train_ds_num]
-        valid_input = sorted(glob(os.path.join(self.valid_fp, "input/*"))
-                             )[: self.valid_ds_num]
-        valid_label = sorted(glob(os.path.join(self.valid_fp, "valid/*"))
-                             )[: self.valid_ds_num]
-
-        train_input = tf.data.Dataset.from_tensor_slices(train_input)
-        train_label = tf.data.Dataset.from_tensor_slices(train_label)
-        valid_input = tf.data.Dataset.from_tensor_slices(valid_input)
-        valid_label = tf.data.Dataset.from_tensor_slices(valid_label)
-
-        return train_input, train_label, valid_input, valid_label
-
-    def return_dataset(self):
-        train_input, train_label, valid_input, valid_label = self.return_fps()
-        train_input = func(train_input.map(
-            self.process_image).cache().repeat().batch(self.train_ds_num))
-        train_label = func(train_label.map(
-            self.process_label).cache().repeat().batch(self.train_ds_num))
-        valid_input = func(valid_input.map(
-            self.process_image).cache().repeat().batch(self.valid_ds_num))
-        valid_label = func(valid_label.map(
-            self.process_label).cache().repeat().batch(self.valid_ds_num))
-
-        train_ds = zip_and_batch_ds(train_input, train_label, self.bs)
-        valid_ds = zip_and_batch_ds(valid_input, valid_label, self.bs)
-
-        train_ds.prefetch(buffer_size=tf.data.AUTOTUNE)
-        valid_ds.prefetch(buffer_size=tf.data.AUTOTUNE)
-
-        return train_ds, valid_ds
-
-    def process_image(self, ds):
-        ds = tf.io.read_file(ds)
-        ds = tf.image.decode_jpeg(ds, self.c)
-        ds = tf.image.resize(ds, size=self.img_shape, antialias=True)
-        ds = tf.clip_by_value(ds / 255., 0., 1.)
-        return ds
-
-    def process_label(self, ds):
-        ds = tf.io.read_file(ds)
-        ds = tf.image.decode_png(ds, self.nc, dtype=self.img_dtypes)
-        ds = tf.image.resize(ds, size=self.img_shape, antialias=True)
-        return ds
-
-
-class DataLoader4Segmentation:
-    def __init__(self, data_filepath):
-        self.v = variables()
-
-        self.c = self.v.channel
-        self.w = self.v.width
-        self.h = self.v.height
-        self.seg_cls = self.v.seg_num
-        self.img_dtypes = tf.dtypes.uint8
-        self.img_shape = [self.w, self.h]
-
-        self.train_ds_num = self.v.num_of_ds["train"]
-        self.valid_ds_num = self.v.num_of_ds["valid"]
-
-        self.train_fp = data_filepath["train_data"]
-        self.valid_fp = data_filepath["valid_data"]
-
-        self.bs = self.v.fitParas['bs']
-
-    def return_fps(self):
-        train_input = sorted(
-            glob(os.path.join(self.train_fp, "input/*")))[: self.train_ds_num]
-        train_label = sorted(
-            glob(os.path.join(self.train_fp, "valid/*")))[: self.train_ds_num]
-        valid_input = sorted(
-            glob(os.path.join(self.valid_fp, "input/*")))[: self.valid_ds_num]
-        valid_label = sorted(
-            glob(os.path.join(self.valid_fp, "valid/*")))[: self.valid_ds_num]
-
-        return train_input, train_label, valid_input, valid_label
-
-    def read_image(self, fps):
-        images = []
-        for fp in fps:
-            tmp_image = np.asarray(cv2.resize(
-                cv2.imread(fp), (self.w, self.h)), dtype=np.float32)
-            tmp_image = tmp_image / 255.
-            images.append(tmp_image)
-        return images
-
-    def read_label(self, fps):
-        labels = []
-        for fp in fps:
-            read_label = cv2.imread(fp, 0)
-            one_hot_label = np.zeros((self.h, self.w, self.seg_cls))
-            for i, unique_value in enumerate(np.unique(read_label)):
-                one_hot_label[:, :, i][read_label == unique_value] = 1
-            labels.append(one_hot_label)
-        return labels
-
-    def return_dataset(self):
-        train_input, train_label, valid_input, valid_label = self.return_fps()
-        train_images = np.array(self.read_image(train_input), dtype=np.float32)
-        valid_images = np.array(self.read_image(valid_input), dtype=np.float32)
-        train_labels = np.array(self.read_label(train_label), dtype=np.int32)
-        valid_labels = np.array(self.read_label(valid_label), dtype=np.int32)
-
-        train_ds = zip_and_batch_ds(train_images, train_labels, self.bs)
-        valid_ds = zip_and_batch_ds(valid_images, valid_labels, self.bs)
-        return train_ds, valid_ds
-
-
-def obtain_fps(filepath, read_num, mark='bmp'):
-    fps = sorted(glob(os.path.join(filepath, ('*.' + mark))))[: read_num]
-    return fps
-
-
-class DataInputPipelineVTest:
-    def __init__(self):
         v = variables()
-        image_fp = v.test_stage_retina_layer["train_image"]
-        label_fp = v.test_stage_retina_layer["train_label"]
-        train_num = v.num_of_ds["train"]
-        valid_num = v.num_of_ds["valid"]
+        self.num_of_data = v.num_of_ds
+        self.imagesize = (v.width, v.height)
+        self.seg_cls = v.seg_num
 
-        self.bs = v.fitParas["bs"]
-        self.im_size = (v.width, v.height)
-        self.label_fps = obtain_fps(label_fp, train_num)
-        self.image_fps = obtain_fps(image_fp, train_num)
-
-    def return_dataset(self):
-        labels = self.read_label(self.label_fps)
-        images = np.expand_dims(self.read_image(self.image_fps), axis=-1)
-
-        train_ds = zip_and_batch_ds(images, labels, self.bs)
-        valid_ds = zip_and_batch_ds(images, labels, self.bs)
-        return train_ds, valid_ds
-
-    def read_image(self, fps):
+    def __call__(self):
         images = []
-        for fp in fps:
-            tmp_image = np.asarray(Image.open(fp), dtype=np.float32)
-            tmp_image = tmp_image / 255.
-            tmp_image = tmp_image[450:834, 100:484]
-            images.append(tmp_image)
-        return np.array(images)
-
-    def read_label(self, fps):
         labels = []
-        for fp in fps:
-            tmp_label = np.asarray(Image.open(fp), dtype=np.int32)
-            tmp_label = tmp_label[450:834, 100:484]
-            new_label = np.zeros(tmp_label.shape + (6, ))
-            for idx in range(6):  # 6 is class number
-                new_label[tmp_label == idx, idx] = 1
-            labels.append(new_label)
-        return np.array(labels)
+
+        "Data Loading from filepath"
+        for image_fp in self.image_fps[:self.num_of_data]:
+            image = cv2.imread(image_fp, 0)
+            image = cv2.resize(
+                image, self.imagesize, interpolation=cv2.INTER_NEAREST)
+            images.append(image)
+
+        for label_fp in self.label_fps[:self.num_of_data]:
+            label = cv2.imread(label_fp, 0)
+            label = cv2.resize(
+                label, self.imagesize, interpolation=cv2.INTER_NEAREST)
+            labels.append(label)
+
+        images, labels = np.array(images), np.array(labels)
+        print("Image & Label Loaded, Number of Segment-Class:{}".format(
+            np.unique(labels)))
+
+        "Encode Labels to One-hot"
+        labelencoder = LabelEncoder()
+        n, h, w = labels.shape
+
+        labels_reshaped = labels.reshape(-1, 1)
+        labels_reshaped_encoded = labelencoder.fit_transform(labels_reshaped)
+        labels_encoded_original_shape = labels_reshaped_encoded.reshape(n, h, w)
+
+        "Create Training Data and Validation Data"
+        images = np.expand_dims(images, axis=-1)
+        images = images / 255.
+        labels = np.expand_dims(labels_encoded_original_shape, axis=3)
+
+        # train-input, valid-input, train-label, valid-label
+        x_train, x_valid, y_train, y_valid = train_test_split(
+            images, labels, test_size=self.valid_rate, random_state=0)
+
+        train_labels_cat = to_categorical(y_train, num_classes=self.seg_cls)
+        y_train_cat = train_labels_cat.reshape((
+            y_train.shape[0], y_train.shape[1], y_train.shape[2], self.seg_cls))
+        valid_labels_cat = to_categorical(y_valid, num_classes=self.seg_cls)
+        y_label_cat = valid_labels_cat.reshape((
+            y_valid.shape[0], y_valid.shape[1], y_valid.shape[2], self.seg_cls))
+
+        return x_train, y_train_cat, x_valid, y_label_cat
