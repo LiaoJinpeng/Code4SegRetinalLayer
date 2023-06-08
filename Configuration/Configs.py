@@ -46,14 +46,14 @@ class Variables:
         self.num_of_ds = 200
 
         # TODO: shape of the datasets and labels
-        self.width = 192
-        self.height = 192
+        self.width = 512
+        self.height = 512
         self.channel = 1
         self.image_shape = (self.width, self.height, self.channel)
 
         # TODO: number of segmentation class
         self.seg_num = 10  # number of segmentation class you want. please input
-        # 1 if you want to do binary segmentation/classification.
+        # 2 if you want to do binary segmentation/classification.
 
         self.optimParas = {
             "beta1": 0.9,
