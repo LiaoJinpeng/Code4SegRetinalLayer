@@ -34,6 +34,7 @@ Now we assume that you are in the command window of your vitural environment. Pl
 - pip install tqdm
 
 Please mannually install additional packages if there is a error raise by Python. 
+Further details of packages are available on 'TensorFlow29.yml' file.
 
 4. Please read detailly to understand how to configure a conda virtual environment.
 - Find 'Existing conda environment' in the following URL and configure your created virtual environment in Step 2&3 above: https://www.jetbrains.com/help/pycharm/conda-support-creating-conda-virtual-environment.html 
