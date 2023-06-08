@@ -306,12 +306,10 @@ class SwinUNet:
         x = Layers.DenseExpandLayer4X(units=self.feature_num[0] * 16)(x)
         num_patch_y = num_patch_y * self.patch_size  # 256
         num_patch_x = num_patch_x * self.patch_size  # 256
-        x = tf.reshape(x, shape=[BS, num_patch_x * num_patch_y, feature_num[0]])
+        x = tf.reshape(x, shape=[BS, num_patch_x, num_patch_y, feature_num[0]])
 
-        x = tf.keras.layers.LayerNormalization()(x)
-        x = tf.keras.layers.Dense(self.out_cls)(x)
-        x = tf.reshape(tensor=x, shape=(
-            tf.shape(x)[0], num_patch_x, num_patch_y, self.out_cls))
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = Layers.Conv(fs=self.out_cls)(x)
 
         if include_top:
             if self.out_cls == 1:
@@ -470,12 +468,10 @@ class LightweightUShapeSwinTransformer:
         x = Layers.DenseExpandLayer4X(units=self.feature_num[0] * 16)(x)
         num_patch_y = num_patch_y * self.patch_size  # 256
         num_patch_x = num_patch_x * self.patch_size  # 256
-        x = tf.reshape(x, shape=[BS, num_patch_x * num_patch_y, feature_num[0]])
+        x = tf.reshape(x, shape=[BS, num_patch_x, num_patch_y, feature_num[0]])
 
-        x = tf.keras.layers.LayerNormalization()(x)
-        x = tf.keras.layers.Dense(self.out_cls)(x)
-        x = tf.reshape(tensor=x, shape=(
-            tf.shape(x)[0], num_patch_x, num_patch_y, self.out_cls))
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = Layers.Conv(fs=self.out_cls)(x)
 
         if include_top:
             if self.out_cls == 1:
