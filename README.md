@@ -1,9 +1,9 @@
 # Segmentation Code for B@I1 Group in UW.
 
-Jinpeng would like to thank friendly and kindly BAIL group members in UW.
+Jinpeng would like to thank the friendly and kind BAIL group members at UW. 
 Here is a TensorFlow-based Deep Learning code for Retina Layer Segmentation.
-The ReadMe will contain two section: 1) Environment Setup; 2) How to Use this Code.
-If you want to use below code for OCT retinal layer segmentation, please follow the instruction. 
+The ReadMe will contain two sections: 1) Environment Setup; 2) How to Use this Code. 
+If you want to use the below code for OCT retinal layer segmentation, please follow the instruction.
 
 # Environment Setup
 0. Suggest Hardware: 
